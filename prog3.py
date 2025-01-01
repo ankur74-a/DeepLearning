@@ -78,3 +78,48 @@ results = model.evaluate(x_test, one_hot_test_labels)
 print(f"Test Loss: {results[0]}, Test Accuracy: {results[1]}")
 
 # Test Loss: 1.111000657081604, Test Accuracy: 0.7804986834526062
+
+
+
+# Shorter code
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers
+from tensorflow.keras.datasets import reuters
+from tensorflow.keras.utils import to_categorical
+
+# Load Reuters dataset with top 10,000 most common words
+(train_data, train_labels), (test_data, test_labels) = reuters.load_data(num_words=10000)
+
+# Vectorize sequences into binary matrix form
+def vectorize_sequences(sequences, dimension=10000):
+    results = np.zeros((len(sequences), dimension))
+    for i, sequence in enumerate(sequences):
+        results[i, sequence] = 1
+    return results
+
+x_train = vectorize_sequences(train_data)
+x_test = vectorize_sequences(test_data)
+
+# One-hot encode labels using built-in function
+y_train = to_categorical(train_labels)
+y_test = to_categorical(test_labels)
+
+# Build a simple neural network model
+model = tf.keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=(10000,)),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(46, activation='softmax')  # 46 classes for classification
+])
+
+# Compile the model
+model.compile(optimizer='rmsprop',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model with validation split
+history = model.fit(x_train, y_train, epochs=10, batch_size=512, validation_split=0.2)
+
+# Evaluate the model
+test_loss, test_acc = model.evaluate(x_test, y_test)
+print(f"Test Loss: {test_loss}, Test Accuracy: {test_acc}")
